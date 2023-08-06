@@ -1,14 +1,15 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+#![warn(clippy::pedantic, clippy::nursery, rust_2018_idioms)]
+#![allow(
+    // Values are too small for truncation or wrap
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    // Sign is already checked and converted to positive
+    clippy::cast_sign_loss
+)]
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+mod binary;
+mod decimal;
+mod util;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use binary::*;
+pub use decimal::*;
