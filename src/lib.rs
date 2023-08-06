@@ -7,6 +7,10 @@
     clippy::cast_sign_loss
 )]
 
+//! A simple, no-dependencies crate for converting a number of bytes into a strongly-typed representation of the "prettified" version of those bytes.
+//!
+//! Compatible with `serde` when the `serde` feature is enabled.
+
 mod binary;
 mod decimal;
 mod util;

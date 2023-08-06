@@ -1,5 +1,6 @@
 use crate::util::round_float;
 
+/// Struct that represents prettified byte values (base-10)
 #[derive(PartialEq, Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PrettyBytes {
@@ -41,6 +42,20 @@ impl ByteValues {
     ];
 }
 
+/// Convert a byte value to a "prettified" version
+///
+/// Converts using base-10 byte suffixes (KB, MB, GB)
+///
+/// ## Example
+/// ```
+/// # use pretty_bytes_enum::pretty_bytes;
+///
+/// // No rounding
+/// let prettified = pretty_bytes(1_000_000., None);
+///
+/// // Round to 2 decimal places
+/// let prettified = pretty_bytes(3_564_234., Some(2));
+/// ```
 #[must_use]
 #[allow(
     // Values are too small for truncation or wrap

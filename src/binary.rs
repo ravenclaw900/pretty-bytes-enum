@@ -2,6 +2,7 @@
 
 use crate::util::round_float;
 
+/// Struct that represents prettified byte values (base-2)
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PrettyBytesBinary {
@@ -43,6 +44,20 @@ impl ByteValuesBinary {
     ];
 }
 
+/// Convert a byte value to a "prettified" version
+///
+/// Converts using base-2 byte suffixes (KiB, MiB, GiB)
+///
+/// ## Example
+/// ```
+/// # use pretty_bytes_enum::pretty_bytes_binary;
+///
+/// // No rounding
+/// let prettified = pretty_bytes_binary(1_048_576., None);
+///
+/// // Round to 2 decimal places
+/// let prettified = pretty_bytes_binary(3_195_498., Some(2));
+/// ```
 #[must_use]
 pub fn pretty_bytes_binary(num: f64, round_places: Option<u8>) -> PrettyBytesBinary {
     let num = num.floor();
