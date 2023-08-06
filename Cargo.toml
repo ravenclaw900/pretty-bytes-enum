@@ -2,6 +2,9 @@
 name = "pretty-bytes-enum"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Strongly-typed prettified byte values"
+repository = "https://github.com/ravenclaw900/pretty-bytes-enum"
 
 [dependencies]
 serde = { version = "1.0.182", features = ["serde_derive"], optional = true }
