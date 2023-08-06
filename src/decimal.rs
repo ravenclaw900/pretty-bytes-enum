@@ -48,7 +48,7 @@ impl ByteValues {
 ///
 /// ## Example
 /// ```
-/// # use pretty_bytes_enum::pretty_bytes;
+/// # use pretty_bytes_typed::pretty_bytes;
 ///
 /// // No rounding
 /// let prettified = pretty_bytes(2_000_000., None);

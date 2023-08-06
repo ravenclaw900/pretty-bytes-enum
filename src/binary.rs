@@ -50,7 +50,7 @@ impl ByteValuesBinary {
 ///
 /// ## Example
 /// ```
-/// # use pretty_bytes_enum::pretty_bytes_binary;
+/// # use pretty_bytes_typed::pretty_bytes_binary;
 ///
 /// // No rounding
 /// let prettified = pretty_bytes_binary(1_048_576., None);
