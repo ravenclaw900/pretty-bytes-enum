@@ -54,9 +54,11 @@ impl ByteValuesBinary {
 ///
 /// // No rounding
 /// let prettified = pretty_bytes_binary(1_048_576., None);
+/// assert_eq!(prettified.to_string(), "1 MiB");
 ///
 /// // Round to 2 decimal places
 /// let prettified = pretty_bytes_binary(3_195_498., Some(2));
+/// assert_eq!(prettified.to_string(), "3.05 MiB");
 /// ```
 #[must_use]
 pub fn pretty_bytes_binary(num: f64, round_places: Option<u8>) -> PrettyBytesBinary {

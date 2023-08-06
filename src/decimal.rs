@@ -51,10 +51,12 @@ impl ByteValues {
 /// # use pretty_bytes_enum::pretty_bytes;
 ///
 /// // No rounding
-/// let prettified = pretty_bytes(1_000_000., None);
+/// let prettified = pretty_bytes(2_000_000., None);
+/// assert_eq!(prettified.to_string(), "2 MB");
 ///
-/// // Round to 2 decimal places
-/// let prettified = pretty_bytes(3_564_234., Some(2));
+/// // Round to 3 decimal places
+/// let prettified = pretty_bytes(3_564_234., Some(3));
+/// assert_eq!(prettified.to_string(), "3.564 MB");
 /// ```
 #[must_use]
 #[allow(
