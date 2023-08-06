@@ -1,6 +1,7 @@
 use crate::util::round_float;
 
 #[derive(PartialEq, Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PrettyBytes {
     num: f64,
     suffix: ByteValues,
@@ -13,6 +14,7 @@ impl std::fmt::Display for PrettyBytes {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 enum ByteValues {
     B,
     KB,
