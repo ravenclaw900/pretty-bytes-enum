@@ -3,7 +3,7 @@
 use crate::util::round_float;
 
 /// Struct that represents prettified byte values (base-2)
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct PrettyBytesBinary {
     num: f64,
