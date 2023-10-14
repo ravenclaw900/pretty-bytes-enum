@@ -5,6 +5,7 @@ use crate::util::round_float;
 /// Struct that represents prettified byte values (base-2)
 #[derive(Debug, PartialEq, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[must_use]
 pub struct PrettyBytesBinary {
     num: f64,
     suffix: ByteValuesBinary,
@@ -26,12 +27,11 @@ enum ByteValuesBinary {
     TiB,
     PiB,
     EiB,
-    ZiB,
-    YiB,
 }
 
 impl ByteValuesBinary {
-    const UNITS: [Self; 9] = [
+    // EiB is the max that can be represented with a u64
+    const UNITS: [Self; 7] = [
         Self::B,
         Self::KiB,
         Self::MiB,
@@ -39,8 +39,6 @@ impl ByteValuesBinary {
         Self::TiB,
         Self::PiB,
         Self::EiB,
-        Self::ZiB,
-        Self::YiB,
     ];
 }
 
@@ -51,27 +49,28 @@ impl ByteValuesBinary {
 /// ## Example
 /// ```
 /// # use pretty_bytes_typed::pretty_bytes_binary;
-///
 /// // No rounding
-/// let prettified = pretty_bytes_binary(1_048_576., None);
+/// let prettified = pretty_bytes_binary(1_048_576, None);
 /// assert_eq!(prettified.to_string(), "1 MiB");
 ///
 /// // Round to 2 decimal places
-/// let prettified = pretty_bytes_binary(3_195_498., Some(2));
+/// let prettified = pretty_bytes_binary(3_195_498, Some(2));
 /// assert_eq!(prettified.to_string(), "3.05 MiB");
 /// ```
-#[must_use]
-pub fn pretty_bytes_binary(num: f64, round_places: Option<u8>) -> PrettyBytesBinary {
-    let num = num.floor();
-    let is_negative = num.is_sign_negative();
-    let mut num = num.abs();
+// Most likely, values will be too small to experience precision loss, and they will often be rounded anyway
+#[allow(clippy::cast_precision_loss)]
+pub fn pretty_bytes_binary(num: u64, round_places: Option<u8>) -> PrettyBytesBinary {
+    // Special handling for 0, because you can't use log on it
+    if num == 0 {
+        return PrettyBytesBinary {
+            num: 0.,
+            suffix: ByteValuesBinary::B,
+        };
+    }
 
-    let exponent = std::cmp::min(
-        num.log(1024.).floor() as usize,
-        ByteValuesBinary::UNITS.len() - 1,
-    );
+    let exponent = std::cmp::min(num.ilog(1024) as usize, ByteValuesBinary::UNITS.len() - 1);
 
-    num /= 1024_f64.powi(exponent as i32);
+    let mut num = num as f64 / 1024_f64.powi(exponent as i32);
 
     if let Some(round_places) = round_places {
         num = round_float(num, round_places);
@@ -79,11 +78,30 @@ pub fn pretty_bytes_binary(num: f64, round_places: Option<u8>) -> PrettyBytesBin
 
     let unit = ByteValuesBinary::UNITS[exponent];
 
+    PrettyBytesBinary { num, suffix: unit }
+}
+
+/// Convert a byte value to a "prettified" version, but accepts negative numbers
+///
+/// Converts using base-2 byte suffixes (KiB, MiB, GiB)
+///
+/// ## Example
+/// ```
+/// # use pretty_bytes_typed::pretty_bytes_signed_binary;
+/// let prettified = pretty_bytes_signed_binary(-1_048_576, None);
+/// assert_eq!(prettified.to_string(), "-1 MiB");
+/// ```
+pub fn pretty_bytes_signed_binary(num: i64, round_places: Option<u8>) -> PrettyBytesBinary {
+    let is_negative = num.is_negative();
+    let num = num.unsigned_abs();
+
+    let mut pretty_bytes = pretty_bytes_binary(num, round_places);
+
     if is_negative {
-        num = -num;
+        pretty_bytes.num = -pretty_bytes.num;
     }
 
-    PrettyBytesBinary { num, suffix: unit }
+    pretty_bytes
 }
 
 #[cfg(test)]
@@ -95,26 +113,16 @@ mod tests {
     fn test_pretty_bytes_binary() {
         // Test '0'
         assert_eq!(
-            pretty_bytes_binary(0., None),
+            pretty_bytes_binary(0, None),
             PrettyBytesBinary {
                 num: 0.,
                 suffix: ByteValuesBinary::B,
             }
         );
 
-        // Test actual decimal values
-        // (should always round down)
-        assert_eq!(
-            pretty_bytes_binary(5.323, None),
-            PrettyBytesBinary {
-                num: 5.,
-                suffix: ByteValuesBinary::B,
-            }
-        );
-
         // Test all unit values
         assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(0), None),
+            pretty_bytes_binary(1024_u64.pow(0), None),
             PrettyBytesBinary {
                 num: 1.,
                 suffix: ByteValuesBinary::B,
@@ -122,7 +130,7 @@ mod tests {
         );
 
         assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(1), None),
+            pretty_bytes_binary(1024_u64.pow(1), None),
             PrettyBytesBinary {
                 num: 1.,
                 suffix: ByteValuesBinary::KiB,
@@ -130,7 +138,7 @@ mod tests {
         );
 
         assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(2), None),
+            pretty_bytes_binary(1024_u64.pow(2), None),
             PrettyBytesBinary {
                 num: 1.,
                 suffix: ByteValuesBinary::MiB,
@@ -138,7 +146,7 @@ mod tests {
         );
 
         assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(3), None),
+            pretty_bytes_binary(1024_u64.pow(3), None),
             PrettyBytesBinary {
                 num: 1.,
                 suffix: ByteValuesBinary::GiB,
@@ -146,7 +154,7 @@ mod tests {
         );
 
         assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(4), None),
+            pretty_bytes_binary(1024_u64.pow(4), None),
             PrettyBytesBinary {
                 num: 1.,
                 suffix: ByteValuesBinary::TiB,
@@ -154,7 +162,7 @@ mod tests {
         );
 
         assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(5), None),
+            pretty_bytes_binary(1024_u64.pow(5), None),
             PrettyBytesBinary {
                 num: 1.,
                 suffix: ByteValuesBinary::PiB,
@@ -162,41 +170,16 @@ mod tests {
         );
 
         assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(6), None),
+            pretty_bytes_binary(1024_u64.pow(6), None),
             PrettyBytesBinary {
                 num: 1.,
                 suffix: ByteValuesBinary::EiB,
             }
         );
 
-        assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(7), None),
-            PrettyBytesBinary {
-                num: 1.,
-                suffix: ByteValuesBinary::ZiB,
-            }
-        );
-
-        assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(8), None),
-            PrettyBytesBinary {
-                num: 1.,
-                suffix: ByteValuesBinary::YiB,
-            }
-        );
-
-        // Test extra large values
-        assert_eq!(
-            pretty_bytes_binary(1024_f64.powi(10), None),
-            PrettyBytesBinary {
-                num: 1024_f64.powi(2),
-                suffix: ByteValuesBinary::YiB,
-            }
-        );
-
         // Test rounding
         assert_eq!(
-            pretty_bytes_binary(5014., Some(2)),
+            pretty_bytes_binary(5014, Some(2)),
             PrettyBytesBinary {
                 num: 4.9,
                 suffix: ByteValuesBinary::KiB,
